@@ -3,11 +3,13 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ZodValidationPipe, ZodSerializerInterceptor } from "nestjs-zod";
-import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from "./auth/auth.module";
+import { PrismaModule } from "./prisma/prisma.module";
+import { ChatModule } from "./chat/chat.module";
+import { FriendModule } from './friend/friend.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule],
+  imports: [AuthModule, PrismaModule, ChatModule, FriendModule],
   controllers: [AppController],
   providers: [
     AppService,
