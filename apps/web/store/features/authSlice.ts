@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { RootState } from "../store";
+import type { AppState } from "../store";
 import type { AuthenticatedUser } from "@repo/types";
 
-interface AuthState {
+export interface AuthState {
   user: AuthenticatedUser | null;
   token: string | null;
 }
@@ -21,13 +21,13 @@ export const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      localStorage.setItem("token", action.payload.token);
+      localStorage.setItem("access_token", action.payload.token);
     },
 
     clearCredentials: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
     },
   },
 });
@@ -38,5 +38,5 @@ export default authSlice.reducer;
 export const { setCredentials, clearCredentials } = authSlice.actions;
 
 //selector
-export const selectCurrentUser = (state: RootState) => state.auth.user;
-export const selectCurrentToken = (state: RootState) => state.auth.token;
+export const selectCurrentUser = (state: AppState) => state.auth.user;
+export const selectCurrentToken = (state: AppState) => state.auth.token;

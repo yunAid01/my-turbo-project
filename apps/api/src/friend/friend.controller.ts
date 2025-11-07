@@ -9,35 +9,37 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { FriendService } from "./friend.service";
-import { CreateFriendDto } from "./dto/create-friend.dto";
-import { UpdateFriendDto } from "./dto/update-friend.dto";
 import { AuthGuard } from "@nestjs/passport";
-import { get } from "http";
+import { User } from "../auth/decorator/user";
+import { AuthenticatedUser } from "@repo/types";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("friend")
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
 
-  // @Post()
-  // create(@Body() createFriendDto: CreateFriendDto) {
-  //   return this.friendService.create(createFriendDto);
-  // }
+  @Post(":id")
+  createFriend(@User() user: AuthenticatedUser, @Param("id") friendId: string) {
+    const userId = user.id;
+    return this.friendService.createFriend(userId, +friendId);
+  }
 
   @Get("my")
-  findMyFriends() {
-    return this.friendService.findFriends();
+  findMyFriends(@User() user: AuthenticatedUser) {
+    const userId = user.id;
+    return this.friendService.findFriends(userId);
   }
 
   @Get("not-my")
-  findNotMyFriends() {
-    return this.friendService.findNotMyFriends();
+  findNotMyFriends(@User() user: AuthenticatedUser) {
+    const userId = user.id;
+    return this.friendService.findNotMyFriends(userId);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.friendService.findOne(+id);
-  // }
+  @Get(":id")
+  findFriendDetails(@Param("id") otherId: string) {
+    return this.friendService.findFriendDetails(+otherId);
+  }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {

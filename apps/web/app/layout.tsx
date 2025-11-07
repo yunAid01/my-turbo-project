@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "../provider/providers";
+import NavBar from "../components/NavBar";
+import GlobalModal from "../components/modals/GlobalModal";
 
 //font 설정
 const geistSans = localFont({
@@ -14,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Coco Chat",
+  title: "T1 Chat",
   description: "KakaoTalk Clone Coding",
 };
 
@@ -24,12 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className="bg-gray-100 flex items-center justify-center min-h-screen"
-    >
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Providers>{children}</Providers>
+    <html lang="ko">
+      <body>
+        <div className={`${geistSans.variable} ${geistMono.variable}`}>
+          {/* <NavBar /> */}
+          <Providers>
+            <NavBar />
+            {children}
+            <GlobalModal />
+          </Providers>
+        </div>
       </body>
     </html>
   );

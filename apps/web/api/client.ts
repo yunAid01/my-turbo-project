@@ -18,6 +18,8 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     console.error("Request error:", error);
+    console.error("에러 상세:", error.response?.data);
+    console.error("상태 코드:", error.response?.status);
     return Promise.reject(error);
   }
 );

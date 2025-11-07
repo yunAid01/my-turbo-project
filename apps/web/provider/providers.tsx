@@ -3,7 +3,7 @@ import { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Provider as ReduxProvider } from "react-redux";
-import { rootStore } from "../store/store";
+import { store } from "../store/store";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ export default function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <ReduxProvider store={rootStore}>
+    <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
         {children}
         <ReactQueryDevtools initialIsOpen={false} />

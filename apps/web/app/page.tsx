@@ -1,17 +1,25 @@
 "use client";
-import router from "next/navigation";
-import UserCard from "../components/UserCard";
+import UserCard from "../components/Card/UserCard";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
 //api
 import { findFriends } from "../api/friend";
 
+// redux
+import { useDispatch } from "react-redux";
+import { openModal } from "../store/features/modalSlice";
+
 export default function Home() {
-  // todo- if not logged in, redirect to login page
-  // if (loggedIn === false) {
-  //   router.push("/login");
-  //   return null;
-  // }
+  const dispatch = useDispatch();
+  const router = useRouter();
+  useEffect(() => {
+    if (!localStorage.getItem("access_token")) {
+      router.push("/login");
+    }
+  }, []);
+
   const {
     data: friends,
     isLoading,
@@ -21,6 +29,10 @@ export default function Home() {
     queryKey: ["friends"],
     queryFn: () => findFriends(),
   });
+
+  const handleOpenFindUserModal = () => {
+    dispatch(openModal({ modalType: "USER_FIND" }));
+  };
 
   if (isLoading) {
     return <div>친구 목록 불러오는 중...</div>;
@@ -33,11 +45,13 @@ export default function Home() {
     <div className="pd-4">
       <h1 className="text-2xl font-bold mb-4">친구목록</h1>
       <div>
-        <UserCard
-          user={{ id: 1, nickname: "친구1", bio: "안녕하세요! 친구1입니다." }}
-        />
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+          onClick={() => handleOpenFindUserModal()}
+        >
+          친구 찾기
+        </button>
       </div>
-      {/* todo - 친구목록 map
       {friends && friends.length > 0 ? (
         <ul>
           {friends.map((friend) => (
@@ -48,7 +62,7 @@ export default function Home() {
         </ul>
       ) : (
         <div>친구가 없습니다.</div>
-      )} */}
+      )}
     </div>
   );
 }
