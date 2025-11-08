@@ -1,15 +1,13 @@
 import Image from "next/image";
-import { MyChatRoomsResponseType } from "@repo/validation";
 import Link from "next/link";
 
 interface ChatroomCardProps {
-  chatroom: MyChatRoomsResponseType[number];
+  chatroom: any;
 }
-
 export default function ChatroomCard({ chatroom }: ChatroomCardProps) {
   // 상대방 정보 가져오기 (1:1 채팅인 경우)
   const otherUser = chatroom.users.find(
-    (u) => u.userId !== chatroom.users[0]?.userId
+    (u: any) => u.userId !== chatroom.users[0]?.userId
   )?.user;
 
   const displayName = chatroom.isGroup

@@ -1,17 +1,26 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Smile } from "lucide-react";
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
 }
 
-export default function MessageInput({ onSendMessage }: MessageInputProps) {
+export default function MessageInput({
+  onSendMessage,
+  onTypingStart,
+  onTypingStop,
+}: MessageInputProps) {
   const [message, setMessage] = useState("");
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSend = () => {
     if (!message.trim()) return;
     onSendMessage(message);
     setMessage("");
+    // 메시지 전송 시 타이핑 종료
+    if (onTypingStop) onTypingStop();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -20,6 +29,35 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       handleSend();
     }
   };
+
+  // 타이핑 감지
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+
+    // 타이핑 시작
+    if (onTypingStart && !typingTimeoutRef.current) {
+      onTypingStart();
+    }
+
+    // 타이핑 중지 타이머 재설정
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      if (onTypingStop) onTypingStop();
+      typingTimeoutRef.current = null;
+    }, 1000); // 1초 동안 입력이 없으면 타이핑 종료
+  };
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="px-6 py-4 bg-gradient-to-r from-gray-900/95 to-black/95 backdrop-blur-sm border-t border-red-900/30">
@@ -36,7 +74,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         <div className="flex-1 relative">
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleChange}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
             rows={1}

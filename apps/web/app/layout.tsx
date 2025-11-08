@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "../provider/providers";
 import NavBar from "../components/NavBar";
 import GlobalModal from "../components/modals/GlobalModal";
+import { SocketProvider } from "../contexts/SocketContext";
 
 //font 설정
 const geistSans = localFont({
@@ -30,19 +31,21 @@ export default function RootLayout({
       <body>
         <div className={`${geistSans.variable} ${geistMono.variable}`}>
           <Providers>
-            {/* Flex 레이아웃: NavBar와 컨텐츠를 가로로 배치 */}
-            <div className="flex h-screen">
-              {/* 왼쪽 고정 NavBar */}
-              <NavBar />
+            <SocketProvider>
+              {/* Flex 레이아웃: NavBar와 컨텐츠를 가로로 배치 */}
+              <div className="flex h-screen">
+                {/* 왼쪽 고정 NavBar */}
+                <NavBar />
+                
+                {/* 오른쪽 메인 컨텐츠 영역 */}
+                <main className="flex-1 overflow-auto">
+                  {children}
+                </main>
+              </div>
               
-              {/* 오른쪽 메인 컨텐츠 영역 */}
-              <main className="flex-1 overflow-auto">
-                {children}
-              </main>
-            </div>
-            
-            {/* 전역 모달 */}
-            <GlobalModal />
+              {/* 전역 모달 */}
+              <GlobalModal />
+            </SocketProvider>
           </Providers>
         </div>
       </body>

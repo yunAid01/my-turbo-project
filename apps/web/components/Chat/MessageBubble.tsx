@@ -1,25 +1,17 @@
+import { CreateMessageResponseType } from "@repo/validation";
 import Image from "next/image";
 
 interface MessageBubbleProps {
-  message: {
-    id: number;
-    senderId: number;
-    content: string;
-    createdAt: string;
-    isMe: boolean;
-    sender: {
-      nickname: string;
-      profileImageUrl: string | null;
-    };
-  };
+  message: CreateMessageResponseType & { isMe: boolean };
   isGroup: boolean;
 }
 
-export default function MessageBubble({ message, isGroup }: MessageBubbleProps) {
+export default function MessageBubble({
+  message,
+  isGroup,
+}: MessageBubbleProps) {
   return (
-    <div
-      className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}
-    >
+    <div className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
       <div
         className={`flex gap-3 max-w-[70%] ${message.isMe ? "flex-row-reverse" : "flex-row"}`}
       >
@@ -27,7 +19,10 @@ export default function MessageBubble({ message, isGroup }: MessageBubbleProps) 
         {!message.isMe && (
           <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-gray-700 shrink-0">
             <Image
-              src={message.sender.profileImageUrl || "/images/default-profileImage.jpg"}
+              src={
+                message.sender.profileImageUrl ||
+                "/images/default-profileImage.jpg"
+              }
               alt={message.sender.nickname}
               fill
               sizes="32px"

@@ -16,7 +16,11 @@ export const useLoginMutation = () => {
     onSuccess: (data) => {
       dispatch(
         setCredentials({
-          user: { ...data.user },
+          user: {
+            ...data.user,
+            statusMessage: data.user.statusMessage ?? undefined,
+            profileImageUrl: data.user.profileImage ?? undefined,
+          },
           token: data.access_token,
         })
       );
