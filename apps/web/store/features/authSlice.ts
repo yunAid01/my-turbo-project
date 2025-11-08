@@ -1,15 +1,44 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../store";
-import type { AuthenticatedUser } from "@repo/types";
 
+interface LoginUser {
+  email: string;
+  nickname: string;
+  id: number;
+  createdAt: string;
+  statusMessage?: string;
+  profileImageUrl?: string;
+  backgroundImageUrl?: string;
+}
 export interface AuthState {
-  user: AuthenticatedUser | null;
+  user: LoginUser | null;
   token: string | null;
 }
-const initialState: AuthState = {
-  user: null,
-  token: null,
+
+// 새로고침 후에도 로그인 상태를 유지하기 위해 로컬 스토리지에서 토큰을 불러옵니다.
+// localStorage에서 초기 상태 복원
+const getInitialState = (): AuthState => {
+  if (typeof window === "undefined") {
+    return {
+      user: null,
+      token: null,
+    };
+  }
+  const savedUser = localStorage.getItem("login_user");
+  const token = localStorage.getItem("access_token");
+  if (savedUser && token) {
+    return {
+      user: JSON.parse(savedUser),
+      token,
+    };
+  }
+  return {
+    user: null,
+    token: null,
+  };
 };
+
+const initialState: AuthState = getInitialState();
 
 export const authSlice = createSlice({
   name: "auth",
@@ -17,10 +46,11 @@ export const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: AuthenticatedUser; token: string }>
+      action: PayloadAction<{ user: LoginUser; token: string }>
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      localStorage.setItem("login_user", JSON.stringify(action.payload.user));
       localStorage.setItem("access_token", action.payload.token);
     },
 

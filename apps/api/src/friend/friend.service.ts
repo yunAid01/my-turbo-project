@@ -1,12 +1,22 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
+// types
+import {
+  MyFriendsResponseType,
+  NotMyFriendsResponseType,
+  CreateFriendResponseType,
+} from "@repo/validation";
+
 @Injectable()
 export class FriendService {
   constructor(private readonly prisma: PrismaService) {}
 
   // todo - 친구 추가
-  async createFriend(userId: number, friendId: number) {
+  async createFriend(
+    userId: number,
+    friendId: number
+  ): Promise<CreateFriendResponseType> {
     const friend = await this.prisma.friend.create({
       data: {
         userId: userId,
@@ -17,8 +27,8 @@ export class FriendService {
           select: {
             id: true,
             nickname: true,
-            email: true,
-            profileImage: true,
+            profileImageUrl: true,
+            backgroundImageUrl: true,
             statusMessage: true,
           },
         },
@@ -29,7 +39,7 @@ export class FriendService {
   }
 
   /** 내친구 찾기 */
-  async findFriends(userId: number) {
+  async findFriends(userId: number): Promise<MyFriendsResponseType> {
     const friends = await this.prisma.friend.findMany({
       where: { userId: userId },
       include: {
@@ -37,8 +47,8 @@ export class FriendService {
           select: {
             id: true,
             nickname: true,
-            email: true,
-            profileImage: true,
+            profileImageUrl: true,
+            backgroundImageUrl: true,
             statusMessage: true,
           },
         },
@@ -52,7 +62,7 @@ export class FriendService {
   }
 
   /** 내 친구가 아닌 친구 찾기 */
-  async findNotMyFriends(userId: number) {
+  async findNotMyFriends(userId: number): Promise<NotMyFriendsResponseType> {
     const myFriends = await this.prisma.friend.findMany({
       where: { userId: userId },
       select: { friendId: true },
@@ -68,8 +78,8 @@ export class FriendService {
       select: {
         id: true,
         nickname: true,
-        email: true,
-        profileImage: true,
+        profileImageUrl: true,
+        backgroundImageUrl: true,
         statusMessage: true,
       },
     });
@@ -77,21 +87,32 @@ export class FriendService {
   }
 
   /** 특정 친구 자세히보기 */
-  async findFriendDetails(friendId: number) {
+  async findFriendDetails(userId: number, friendId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: friendId },
       select: {
         id: true,
         nickname: true,
-        email: true,
-        profileImage: true,
+        profileImageUrl: true,
+        backgroundImageUrl: true,
         statusMessage: true,
       },
     });
     if (!user) {
       throw new NotFoundException("사용자를 찾을 수 없습니다.");
     }
-    return user;
+    const friendRelation = await this.prisma.friend.findUnique({
+      where: {
+        userId_friendId: { userId, friendId },
+      },
+    });
+
+    return {
+      ...user,
+      isFriend: !!friendRelation, // 친구 여부
+      isFavorite: friendRelation ? friendRelation.isFavorite : false,
+      isBlocked: friendRelation ? friendRelation.isBlocked : false,
+    };
   }
 
   // update(id: number, updateFriendDto: UpdateFriendDto) {

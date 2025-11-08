@@ -1,30 +1,42 @@
 import apiClient from "./client";
 
+// types
+import {
+  MyFriendsResponseType,
+  NotMyFriendsResponseType,
+} from "@repo/validation";
+import { FriendDetailsResponseType } from "@repo/validation";
+
 /** 친구 목록 조회(최초 진입점) */
-export const findFriends = async () => {
-  const response = await apiClient.get("/friend/my");
+export const findFriends = async (): Promise<MyFriendsResponseType> => {
+  const response: MyFriendsResponseType = await apiClient.get("/friend/my");
   return response;
 };
 
-export const findNotMyFriends = async () => {
-  const response = await apiClient.get("/friend/not-my");
+/** 내 친구 아닌 친구 목록 조회 */
+export const findNotMyFriends = async (): Promise<NotMyFriendsResponseType> => {
+  const response: NotMyFriendsResponseType =
+    await apiClient.get("/friend/not-my");
   return response;
 };
 
-// todo - 친구 추가
+// todo - 친구 추가 -> 잘 작동했음
 export const addFriend = async (friendId: number) => {
   const response = await apiClient.post(`/friend/${friendId}`);
   return response;
 };
 
-// todo - 친구 삭제
+// todo - 친구 삭제 구현해야 함
 export const deleteFriend = async (friendId: number) => {
   const response = await apiClient.delete(`/friend/${friendId}`);
   return response;
 };
 
-// todo - 친구 자세히보기
-export const getFriendDetails = async (friendId: number) => {
-  const response = await apiClient.get(`/friend/${friendId}`);
+export const getFriendDetails = async (
+  friendId: number
+): Promise<FriendDetailsResponseType> => {
+  const response: FriendDetailsResponseType = await apiClient.get(
+    `/friend/${friendId}`
+  );
   return response;
 };

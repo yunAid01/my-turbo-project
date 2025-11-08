@@ -8,7 +8,8 @@ import { z } from "zod";
 export const UserBasicSchema = z.object({
   id: z.number(),
   nickname: z.string(),
-  profileImage: z.string().nullable(),
+  profileImageUrl: z.string().nullable(),
+  backgroundImageUrl: z.string().nullable(),
   statusMessage: z.string().nullable(),
 });
 
@@ -34,7 +35,7 @@ export const CreateFriendResponseSchema = z.object({
   isFavorite: z.boolean(),
   isBlocked: z.boolean(),
   createdAt: z.date(),
-  friend: UserDetailSchema,
+  friend: UserBasicSchema,
 });
 
 // ============================================================================
@@ -49,7 +50,7 @@ export const MyFriendItemSchema = z.object({
   isFavorite: z.boolean(),
   isBlocked: z.boolean(),
   createdAt: z.date(),
-  friend: UserDetailSchema,
+  friend: UserBasicSchema,
 });
 
 /** 내 친구 목록 응답 (배열) */
@@ -70,6 +71,7 @@ export const NotMyFriendsResponseSchema = z.array(UserBasicSchema);
 export const FriendDetailsResponseSchema = UserBasicSchema.extend({
   isFriend: z.boolean(),
   isFavorite: z.boolean(),
+  isBlocked: z.boolean(),
 });
 
 // ============================================================================

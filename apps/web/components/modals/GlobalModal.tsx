@@ -2,10 +2,15 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, AppState } from "../../store/store";
+
+// Modal components
 import ModalLayout from "./ModalLayout";
 import { closeModal } from "../../store/features/modalSlice";
 import UserFindModal from "./UserFindModal";
 import UserDetailModal from "./UserDetailModal";
+import LogoutConfirmModal from "./LogoutConfirmModal";
+import CreateChatroomModal from "./CreateChatroomModal";
+
 
 export default function GlobalModal() {
   const dispatch: AppDispatch = useDispatch();
@@ -22,6 +27,8 @@ export default function GlobalModal() {
   const MODAL_COMPONENTS: { [key: string]: React.ElementType } = {
     USER_FIND: UserFindModal,
     USER_DETAIL: UserDetailModal,
+    LOGOUT_CONFIRM: LogoutConfirmModal,
+    CREATE_CHATROOM: CreateChatroomModal,
   };
   const SpecificModal = MODAL_COMPONENTS[modalType];
   if (!SpecificModal) {

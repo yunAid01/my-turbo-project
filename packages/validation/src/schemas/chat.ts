@@ -8,12 +8,13 @@ import { z } from "zod";
 export const MessageSenderSchema = z.object({
   id: z.number(),
   nickname: z.string(),
+  profileImageUrl: z.string().nullable(),
 });
 
 /** 읽음 확인 정보 */
 export const ReadReceiptSchema = z.object({
   userId: z.number(),
-  readAt: z.date(),
+  readAt: z.string().or(z.date()), // ISO string 또는 Date 객체
 });
 
 /** 채팅방 참여 유저 정보 */
@@ -21,12 +22,14 @@ export const ChatRoomUserSchema = z.object({
   id: z.number(),
   chatRoomId: z.number(),
   userId: z.number(),
-  joinedAt: z.date(),
-  leftAt: z.date().nullable(),
+  isAdmin: z.boolean(),
+  joinedAt: z.string().or(z.date()),
+  leftAt: z.string().nullable().or(z.date().nullable()),
+  notificationOn: z.boolean(),
   user: z.object({
     id: z.number(),
     nickname: z.string(),
-    profileImage: z.string().nullable(),
+    profileImageUrl: z.string().nullable(),
     statusMessage: z.string().nullable(),
   }),
 });
@@ -37,8 +40,9 @@ export const MessageSchema = z.object({
   chatRoomId: z.number(),
   senderId: z.number(),
   content: z.string(),
-  messageType: z.enum(["TEXT", "IMAGE", "VIDEO", "FILE"]),
-  createdAt: z.date(),
+  isDeleted: z.boolean(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
   sender: MessageSenderSchema,
   readReceipts: z.array(ReadReceiptSchema),
 });
@@ -51,9 +55,10 @@ export const MessageSchema = z.object({
 export const ChatRoomItemSchema = z.object({
   id: z.number(),
   name: z.string().nullable(),
-  isGroupChat: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  isGroup: z.boolean(),
+  imageUrl: z.string().nullable(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
   users: z.array(ChatRoomUserSchema),
   messages: z.array(MessageSchema),
   unreadCount: z.number(),
@@ -61,6 +66,42 @@ export const ChatRoomItemSchema = z.object({
 
 /** 내 채팅방 목록 응답 (배열) */
 export const MyChatRoomsResponseSchema = z.array(ChatRoomItemSchema);
+
+// ============================================================================
+// CHAT - 채팅방 생성
+// ============================================================================
+
+/** 1:1 채팅방 생성 요청 */
+export const CreateChatRoomRequestSchema = z.object({
+  friendId: z.number(),
+});
+
+/** 그룹 채팅방 생성 요청 */
+export const CreateGroupChatRoomRequestSchema = z.object({
+  friendIds: z.array(z.number()).min(2, "그룹 채팅은 최소 2명 이상이어야 합니다"),
+  name: z.string().optional(),
+});
+
+/** 채팅방 생성 응답 (기본 정보만) */
+export const CreateChatRoomResponseSchema = z.object({
+  id: z.number(),
+  name: z.string().nullable(),
+  isGroup: z.boolean(),
+  imageUrl: z.string().nullable(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+  users: z.array(
+    z.object({
+      id: z.number(),
+      chatRoomId: z.number(),
+      userId: z.number(),
+      isAdmin: z.boolean(),
+      joinedAt: z.string().or(z.date()),
+      leftAt: z.string().nullable().or(z.date().nullable()),
+      notificationOn: z.boolean(),
+    })
+  ),
+});
 
 // ============================================================================
 // Type Exports
@@ -72,3 +113,6 @@ export type ChatRoomUserType = z.infer<typeof ChatRoomUserSchema>;
 export type MessageType = z.infer<typeof MessageSchema>;
 export type ChatRoomItemType = z.infer<typeof ChatRoomItemSchema>;
 export type MyChatRoomsResponseType = z.infer<typeof MyChatRoomsResponseSchema>;
+export type CreateChatRoomRequestType = z.infer<typeof CreateChatRoomRequestSchema>;
+export type CreateGroupChatRoomRequestType = z.infer<typeof CreateGroupChatRoomRequestSchema>;
+export type CreateChatRoomResponseType = z.infer<typeof CreateChatRoomResponseSchema>;

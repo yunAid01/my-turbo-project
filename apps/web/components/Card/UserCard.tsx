@@ -1,3 +1,5 @@
+"use client";
+
 // 1. 프로필 사진이 없을 때 기본 이미지를 사용합니다.
 import Image from "next/image";
 
@@ -9,8 +11,8 @@ interface UserCardProps {
   user: {
     id: number;
     nickname: string;
-    profileImageUrl?: string; // 2. 프로필 이미지 URL (선택적)
-    statusMessage?: string; // 3. 상태 메시지 (선택적)
+    profileImageUrl?: string | null; // 2. 프로필 이미지 URL (선택적)
+    statusMessage?: string | null; // 3. 상태 메시지 (선택적)
   };
 }
 
@@ -23,35 +25,33 @@ export default function UserCard({ user }: UserCardProps) {
   };
 
   return (
-    // 5. 전체 컨테이너
-    // - flex, items-center: 프로필 사진과 텍스트를 가로로, 중앙 정렬
-    // - space-x-4: 프로필 사진과 텍스트 사이의 간격
-    // - p-3: 내부 여백 (p-4보다 살짝 줄여서 더 카톡 느낌나게)
-    // - rounded-lg: 모서리를 살짝 둥글게
-    // - transition-colors ... hover:bg-gray-100: 마우스를 올리면 0.15초 동안 배경색이 변함
     <div
       onClick={() => handleUserDetailModalOpen()}
-      className="flex items-center w-full p-3 space-x-4 transition-colors duration-150 rounded-lg cursor-pointer hover:bg-gray-100"
+      className="flex items-center w-full p-4 space-x-4 cursor-pointer group"
     >
-      {/* 6. 프로필 이미지 영역 */}
-      <div className="relative shrink-0 w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-        <Image
-          src={user.profileImageUrl || "/images/default-profileImage.jpg"}
-          alt={user.nickname}
-          fill
-          sizes="48px"
-          className="object-cover"
-        />
+      {/* 프로필 이미지 영역 - T1 스타일 */}
+      <div className="relative shrink-0">
+        {/* 외부 레드 글로우 링 */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-800 rounded-full opacity-0 group-hover:opacity-100 blur transition-opacity duration-300"></div>
+
+        {/* 프로필 이미지 */}
+        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gray-800 group-hover:border-red-700 transition-colors duration-300">
+          <Image
+            src={user.profileImageUrl || "/images/default-profileImage.jpg"}
+            alt={user.nickname}
+            fill
+            sizes="56px"
+            className="object-cover"
+          />
+        </div>
+
+        {/* 온라인 상태 인디케이터 */}
+        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full"></div>
       </div>
 
-      {/* 7. 닉네임과 상태 메시지 영역 */}
-      {/*
-        - flex-grow: 남은 공간을 모두 차지
-        - min-w-0: (중요) 이 설정이 없으면 닉네임이나 상태 메시지가 
-                      너무 길 때 truncate(줄임표 '...')가 작동하지 않습니다.
-      */}
+      {/* 닉네임과 상태 메시지 영역 */}
       <div className="grow min-w-0">
-        <h2 className="text-base font-semibold text-gray-800 truncate">
+        <h2 className="text-base font-bold text-white group-hover:text-red-500 truncate transition-colors duration-200">
           {user.nickname}
         </h2>
       </div>

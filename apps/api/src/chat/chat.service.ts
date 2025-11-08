@@ -1,10 +1,75 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { CreateGroupChatRoomRequestType } from "@repo/validation";
 
 @Injectable()
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** create 1:1 chat room */
+  async createChatRoom(myId: number, friendId: number) {
+    const existingRoom = await this.prisma.chatRoom.findFirst({
+      where: {
+        isGroup: false,
+        users: {
+          every: {
+            userId: {
+              in: [myId, friendId],
+            },
+          },
+        },
+      },
+      include: {
+        users: true,
+      },
+    });
+
+    if (
+      existingRoom &&
+      existingRoom.users.length === 2 &&
+      existingRoom.users.some((u) => u.userId === myId) &&
+      existingRoom.users.some((u) => u.userId === friendId)
+    ) {
+      return existingRoom;
+    }
+
+    const chatRoom = await this.prisma.chatRoom.create({
+      data: {
+        isGroup: false,
+        users: {
+          create: [{ userId: myId }, { userId: friendId }],
+        },
+      },
+      include: {
+        users: true,
+      },
+    });
+    return chatRoom;
+  }
+
+  /** create group chat room */
+  async createGroupChatRoom(
+    myId: number,
+    data: CreateGroupChatRoomRequestType
+  ) {
+    const chatRoom = await this.prisma.chatRoom.create({
+      data: {
+        isGroup: true,
+        name: data.name || `Group Chat ##${Date.now().toString().slice(-7)}`,
+        users: {
+          create: data.friendIds
+            .map((id) => ({ userId: id }))
+            .concat({ userId: myId }),
+        },
+      },
+      include: {
+        users: true,
+      },
+    });
+    return chatRoom;
+  }
+
+  // -- todo : 이거 뭔데 ㅆㅂ--
   async findMyChatRooms(userId: number) {
     const chatRooms = await this.prisma.chatRoom.findMany({
       where: {
@@ -25,7 +90,7 @@ export class ChatService {
               select: {
                 id: true,
                 nickname: true,
-                profileImage: true,
+                profileImageUrl: true,
                 statusMessage: true,
               },
             },
@@ -41,6 +106,7 @@ export class ChatService {
               select: {
                 id: true,
                 nickname: true,
+                profileImageUrl: true,
               },
             },
             readReceipts: {

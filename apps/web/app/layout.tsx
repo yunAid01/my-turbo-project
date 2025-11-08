@@ -29,10 +29,19 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <div className={`${geistSans.variable} ${geistMono.variable}`}>
-          {/* <NavBar /> */}
           <Providers>
-            <NavBar />
-            {children}
+            {/* Flex 레이아웃: NavBar와 컨텐츠를 가로로 배치 */}
+            <div className="flex h-screen">
+              {/* 왼쪽 고정 NavBar */}
+              <NavBar />
+              
+              {/* 오른쪽 메인 컨텐츠 영역 */}
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+            
+            {/* 전역 모달 */}
             <GlobalModal />
           </Providers>
         </div>

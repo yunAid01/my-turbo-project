@@ -16,7 +16,7 @@ export const useLoginMutation = () => {
     onSuccess: (data) => {
       dispatch(
         setCredentials({
-          user: { id: data.user.id, nickname: data.user.nickname },
+          user: { ...data.user },
           token: data.access_token,
         })
       );
