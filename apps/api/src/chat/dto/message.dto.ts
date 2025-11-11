@@ -1,18 +1,18 @@
 import { createZodDto } from "nestjs-zod";
 import {
   CreateMessageRequestSchema,
-  CreateMessageResponseSchema,
   DeleteMessageResponseSchema,
   MessageResponseSchema,
+  MessageSchema,
 } from "@repo/validation";
 
 export class CreateMessageRequestDto extends createZodDto(
   CreateMessageRequestSchema
 ) {}
-export class CreateMessageResponseDto extends createZodDto(
-  CreateMessageResponseSchema
-) {}
+export class CreateMessageResponseDto extends createZodDto(MessageSchema) {}
 export class DeleteMessageResponseDto extends createZodDto(
   DeleteMessageResponseSchema
 ) {}
-export class MessageResponseDto extends createZodDto(MessageResponseSchema) {}
+export class MessageListResponseDto extends createZodDto(
+  MessageResponseSchema
+) {}

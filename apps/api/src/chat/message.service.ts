@@ -6,7 +6,6 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import {
   CreateMessageRequestType,
-  CreateMessageResponseType,
   DeleteMessageResponseType,
   MessageType,
 } from "@repo/validation";
@@ -15,11 +14,27 @@ import {
 export class MessageService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly messageInclude = {
+    sender: {
+      select: {
+        id: true,
+        nickname: true,
+        profileImageUrl: true,
+      },
+    },
+    readReceipts: {
+      select: {
+        userId: true,
+        readAt: true,
+      },
+    },
+  };
+
   /** 메시지 생성 */
   async createMessage(
     userId: number,
     data: CreateMessageRequestType
-  ): Promise<CreateMessageResponseType> {
+  ): Promise<MessageType> {
     // 1. 채팅방 존재 및 권한 확인
     const chatRoomUser = await this.prisma.chatRoomUser.findFirst({
       where: {
@@ -40,15 +55,7 @@ export class MessageService {
         senderId: userId,
         content: data.content,
       },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            nickname: true,
-            profileImageUrl: true,
-          },
-        },
-      },
+      include: this.messageInclude,
     });
     // 3. 채팅방 업데이트 시간 갱신
     await this.prisma.chatRoom.update({
@@ -111,21 +118,7 @@ export class MessageService {
       where: {
         chatRoomId: chatRoomId,
       },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            nickname: true,
-            profileImageUrl: true,
-          },
-        },
-        readReceipts: {
-          select: {
-            userId: true,
-            readAt: true,
-          },
-        },
-      },
+      include: this.messageInclude,
       orderBy: {
         createdAt: "asc", // 오래된 순서
       },
@@ -144,12 +137,9 @@ export class MessageService {
         },
       },
     });
-
     if (existingReceipt) {
-      return existingReceipt;
+      return existingReceipt; // 이미 읽음 처리된 경우 반환
     }
-
-    // 읽음 처리 추가
     return await this.prisma.readReceipt.create({
       data: {
         messageId: messageId,

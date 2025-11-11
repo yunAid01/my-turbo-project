@@ -7,9 +7,10 @@ import { AuthModule } from "./auth/auth.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ChatModule } from "./chat/chat.module";
 import { FriendModule } from './friend/friend.module';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ChatModule, FriendModule],
+  imports: [AuthModule, PrismaModule, ChatModule, FriendModule, UserModule],
   controllers: [AppController],
   providers: [
     AppService,

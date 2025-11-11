@@ -1,13 +1,38 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { CreateGroupChatRoomRequestType } from "@repo/validation";
+import {
+  CreateChatRoomResponseType,
+  CreateGroupChatRoomRequestType,
+  MyChatRoomsListResponseType,
+} from "@repo/validation";
 
 @Injectable()
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly chatRoomsInclude = {
+    users: {
+      where: {
+        leftAt: null,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImageUrl: true,
+            statusMessage: true,
+          },
+        },
+      },
+    },
+  };
+
   /** create 1:1 chat room */
-  async createChatRoom(myId: number, friendId: number) {
+  async createChatRoom(
+    myId: number,
+    friendId: number
+  ): Promise<CreateChatRoomResponseType> {
     const existingRoom = await this.prisma.chatRoom.findFirst({
       where: {
         isGroup: false,
@@ -19,9 +44,7 @@ export class ChatService {
           },
         },
       },
-      include: {
-        users: true,
-      },
+      include: this.chatRoomsInclude,
     });
 
     if (
@@ -30,6 +53,10 @@ export class ChatService {
       existingRoom.users.some((u) => u.userId === myId) &&
       existingRoom.users.some((u) => u.userId === friendId)
     ) {
+      console.log(
+        "Existing room structure:",
+        JSON.stringify(existingRoom, null, 2)
+      );
       return existingRoom;
     }
 
@@ -40,10 +67,9 @@ export class ChatService {
           create: [{ userId: myId }, { userId: friendId }],
         },
       },
-      include: {
-        users: true,
-      },
+      include: this.chatRoomsInclude,
     });
+    console.log("Created room structure:", JSON.stringify(chatRoom, null, 2));
     return chatRoom;
   }
 
@@ -51,26 +77,25 @@ export class ChatService {
   async createGroupChatRoom(
     myId: number,
     data: CreateGroupChatRoomRequestType
-  ) {
+  ): Promise<CreateChatRoomResponseType> {
     const chatRoom = await this.prisma.chatRoom.create({
       data: {
         isGroup: true,
-        name: data.name || `Group Chat ##${Date.now().toString().slice(-7)}`,
+        name: data.name || `Group Chat ${Date.now().toString().slice(-7)}`,
         users: {
-          create: data.friendIds
-            .map((id) => ({ userId: id }))
-            .concat({ userId: myId }),
+          create: [
+            ...data.friendIds.map((id) => ({ userId: id })),
+            { userId: myId },
+          ],
         },
       },
-      include: {
-        users: true,
-      },
+      include: this.chatRoomsInclude,
     });
     return chatRoom;
   }
 
-  // -- todo : 이거 뭔데 ㅆㅂ--
-  async findMyChatRooms(userId: number) {
+  /** find my chat room lists */
+  async findMyChatRooms(userId: number): Promise<MyChatRoomsListResponseType> {
     const chatRooms = await this.prisma.chatRoom.findMany({
       where: {
         users: {
@@ -81,41 +106,12 @@ export class ChatService {
         },
       },
       include: {
-        users: {
-          where: {
-            leftAt: null, // 현재 참여중인 사용자만
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                nickname: true,
-                profileImageUrl: true,
-                statusMessage: true,
-              },
-            },
-          },
-        },
+        ...this.chatRoomsInclude,
         messages: {
           orderBy: {
             createdAt: "desc",
           },
           take: 1, // 마지막 메시지만
-          include: {
-            sender: {
-              select: {
-                id: true,
-                nickname: true,
-                profileImageUrl: true,
-              },
-            },
-            readReceipts: {
-              select: {
-                userId: true,
-                readAt: true,
-              },
-            },
-          },
         },
       },
       orderBy: {
@@ -124,7 +120,7 @@ export class ChatService {
     });
 
     // 안읽은 메시지 수 계산 추가
-    const chatRoomsWithUnreadCount = await Promise.all(
+    const chatRoomsWithLastMessage = await Promise.all(
       chatRooms.map(async (room) => {
         const unreadCount = await this.prisma.message.count({
           where: {
@@ -139,12 +135,48 @@ export class ChatService {
         });
 
         return {
-          ...room,
+          id: room.id,
+          name: room.name,
+          isGroup: room.isGroup,
+          imageUrl: room.imageUrl,
+          createdAt: room.createdAt,
+          updatedAt: room.updatedAt,
+          users: room.users,
+          lastMessage: room.messages[0]?.isDeleted
+            ? "삭제된 메시지"
+            : room.messages[0]?.content || null,
+          lastMessageAt: room.messages[0]?.createdAt || null,
           unreadCount,
         };
       })
     );
 
-    return chatRoomsWithUnreadCount;
+    return chatRoomsWithLastMessage;
+  }
+
+  /** delete chat room */
+  async deleteMyChatRoom(myId: number, roomId: number) {
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: roomId },
+      include: {
+        users: true,
+      },
+    });
+    if (!chatRoom) {
+      throw new NotFoundException("채팅방을 찾을 수 없습니다.");
+    }
+    const isParticipant = chatRoom.users.some(
+      (user) => user.userId === myId && user.leftAt === null
+    );
+    if (!isParticipant) {
+      throw new NotFoundException("채팅방을 찾을 수 없습니다.");
+    }
+    await this.prisma.chatRoom.delete({
+      where: { id: roomId },
+    });
+    return {
+      success: true,
+      message: "chatRoom is successfully deleted.",
+    };
   }
 }

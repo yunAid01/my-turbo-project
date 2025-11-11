@@ -115,11 +115,16 @@ export class FriendService {
     };
   }
 
-  // update(id: number, updateFriendDto: UpdateFriendDto) {
-  //   return `This action updates a #${id} friend`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} friend`;
-  // }
+  /** 친구 삭제 */
+  async deleteFriend(myId: number, friendId: number) {
+    await this.prisma.friend.delete({
+      where: {
+        userId_friendId: {
+          userId: myId,
+          friendId: friendId,
+        },
+      },
+    });
+    return { message: "Friend deleted successfully." };
+  }
 }

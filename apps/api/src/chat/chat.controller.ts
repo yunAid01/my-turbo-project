@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { ChatService } from "./chat.service";
 import { User } from "../auth/decorator/user";
@@ -10,7 +19,9 @@ import {
   CreateChatRoomRequestDto,
   CreateChatRoomResponseDto,
   CreateGroupChatRoomRequestDto,
-} from "./dto/create-chatroom.dto";
+  DeleteChatRoomResponseDto,
+  MyChatRoomsListResponseDto,
+} from "./dto/chatroom.dto";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("chat")
@@ -28,16 +39,28 @@ export class ChatController {
     return this.chatService.createChatRoom(userId, friendId);
   }
 
+  /** 채팅방 삭제 */
+  @ZodResponse({ type: DeleteChatRoomResponseDto })
+  @Delete("room/:id")
+  deleteChatRoom(
+    @User() user: AuthenticatedUser,
+    @Param("id", ParseIntPipe) chatRoomId: number
+  ) {
+    const userId = user.id;
+    return this.chatService.deleteMyChatRoom(userId, chatRoomId);
+  }
+
   @ZodResponse({ type: CreateChatRoomResponseDto })
   @Post("room/group")
   createGroupChatRoom(
     @User() user: AuthenticatedUser,
-    @Body() data: CreateGroupChatRoomRequestDto
+    @Body() friends: CreateGroupChatRoomRequestDto
   ) {
     const userId = user.id;
-    return this.chatService.createGroupChatRoom(userId, data);
+    return this.chatService.createGroupChatRoom(userId, friends);
   }
 
+  @ZodResponse({ type: MyChatRoomsListResponseDto })
   @Get("rooms")
   findMyChatRooms(@User() user: AuthenticatedUser) {
     const userId = user.id;

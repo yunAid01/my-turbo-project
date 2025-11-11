@@ -58,13 +58,9 @@ export class FriendController {
     return this.friendService.findFriendDetails(userId, +otherId);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {
-  //   return this.friendService.update(+id, updateFriendDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.friendService.remove(+id);
-  // }
+  @Delete(":id")
+  deleteFriend(@User() user: AuthenticatedUser, @Param("id") id: string) {
+    const myId = user.id;
+    return this.friendService.deleteFriend(myId, +id);
+  }
 }

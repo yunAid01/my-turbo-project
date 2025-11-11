@@ -32,6 +32,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private logger: Logger = new Logger("ChatGateway");
+  
+  // 온라인 사용자 추적 (userId -> Set<socketId>)
+  private onlineUsers: Map<number, Set<string>> = new Map();
 
   constructor(
     private readonly messageService: MessageService,
@@ -57,8 +60,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
       client.data.userId = payload.sub;
       client.data.email = payload.email;
+      
+      // 온라인 사용자 목록에 추가
+      if (!this.onlineUsers.has(client.data.userId)) {
+        this.onlineUsers.set(client.data.userId, new Set());
+      }
+      this.onlineUsers.get(client.data.userId)!.add(client.id);
+      
+      // 현재 온라인인 모든 사용자 ID 목록 전송
+      const onlineUserIds = Array.from(this.onlineUsers.keys());
+      client.emit("online_users", onlineUserIds);
+      
       this.logger.log(
-        `Client connected: ${client.id}, User ID: ${client.data.userId}`
+        `Client connected: ${client.id}, User ID: ${client.data.userId}, Online users: ${onlineUserIds.length}`
       );
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);
@@ -68,6 +82,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /** 클라이언트 연결 해제 시 */
   handleDisconnect(client: Socket) {
+    const userId = client.data.userId;
+    
+    if (userId && this.onlineUsers.has(userId)) {
+      const userSockets = this.onlineUsers.get(userId)!;
+      userSockets.delete(client.id);
+      
+      // 해당 사용자의 모든 소켓이 끊어졌으면 오프라인 처리
+      if (userSockets.size === 0) {
+        this.onlineUsers.delete(userId);
+        // 모든 클라이언트에게 사용자 오프라인 알림
+        this.server.emit("user_offline", { userId });
+        this.logger.log(`User ${userId} is now offline`);
+      }
+    }
+    
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
@@ -83,7 +112,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await client.join(roomName);
     this.logger.log(`User ${client.data.userId} joined room: ${roomName}`);
 
-    // 채팅방에 입장 알림
+    // 채팅방에 입장 알림 (사용자가 온라인 상태로 변경됨)
+    this.server.emit("user_online", { userId: client.data.userId });
+    
+    // 채팅방 내 사용자들에게 입장 알림
     client.to(roomName).emit("user_joined", {
       userId: client.data.userId,
       chatRoomId,

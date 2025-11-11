@@ -16,7 +16,7 @@ import {
   CreateMessageRequestDto,
   CreateMessageResponseDto,
   DeleteMessageResponseDto,
-  MessageResponseDto,
+  MessageListResponseDto,
 } from "./dto/message.dto";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
@@ -49,7 +49,7 @@ export class MessageController {
 
   @Get("room/:chatRoomId")
   @ApiOperation({ summary: "Get messages in a chat room" })
-  @ZodResponse({ type: MessageResponseDto })
+  @ZodResponse({ type: MessageListResponseDto })
   getChatRoomMessages(
     @User() user: AuthenticatedUser,
     @Param("chatRoomId", ParseIntPipe) chatRoomId: number
@@ -63,6 +63,7 @@ export class MessageController {
     @User() user: AuthenticatedUser,
     @Param("messageId", ParseIntPipe) messageId: number
   ) {
-    return this.messageService.markAsRead(user.id, messageId);
+    const userId = user.id;
+    return this.messageService.markAsRead(userId, messageId);
   }
 }
