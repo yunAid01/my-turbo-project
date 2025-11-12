@@ -1,7 +1,8 @@
 AI 에이전트 쓰다가 프로젝트 날려먹음
 그래서 이렇게 turborepo 쓴 경험과 React-query, zod(front-backend 타입), useHook(custom), redux toolkit 쓴것들 
 더 다듬어서 가독성좋게, 그리고 유지보수 하기도 좋게 새로운 프로젝트를 진행해보려고 함.
-변수 네이밍도 최대한 짧고 가독성 좋게 가보자 ㄱㄱ
+폴도구조도 좀 더 보기좋게, .그리고 
+변수 네이밍도 최대한 짧고 가독성 좋게 가보자 ㄱㄱ 
 
 # Turborepo starter
 
